@@ -1,136 +1,484 @@
-
 import tkinter as tk
 from tkinter import messagebox
 from tkinter import ttk
 import Backend as bk
 
-print("BACKEND FILE:", bk.__file__)
-print("BOOK APPT FUNCTION:", bk.book_appt)
 
-
-# ==================================================
-# MAIN WINDOW
-# ==================================================
+# ==============
+# SWASTHSETHU
+# ==============
 
 window = tk.Tk()
 
 window.title("SWASTHSETHU")
-window.geometry("500x500")
+window.geometry("1100x700")
+window.resizable(False, False)
+window.configure(bg="#F4F8FC")
 
 
-# ==================================================
-# CLEAR WINDOW
-# ==================================================
+# =========
+# COLOURS
+# =========
 
-def clear_window():
-    for widget in window.winfo_children():
+SIDEBAR = "#063B4C"
+PRIMARY = "#08A6A6"
+PRIMARY_DARK = "#087F8C"
+
+BLUE = "#3182CE"
+PURPLE = "#805AD5"
+PINK = "#E85D75"
+ORANGE = "#F59E0B"
+GREEN = "#16A085"
+
+WHITE = "#FFFFFF"
+LIGHT = "#F4F8FC"
+TEXT = "#000000"
+GRAY = "#718096"
+
+
+# ==========
+# UTILITY
+# ==========
+
+def clear_content():
+    for widget in content.winfo_children():
         widget.destroy()
 
 
-# ==================================================
-# DISPLAY RESULTS
-# ==================================================
+def hover(button, normal, active):
+
+    button.bind(
+        "<Enter>",
+        lambda e: button.config(bg=active)
+    )
+
+    button.bind(
+        "<Leave>",
+        lambda e: button.config(bg=normal)
+    )
+
+
+def darken(hex_color, factor=0.65):
+    """Return a darker shade of a hex color (factor < 1 = darker)."""
+
+    hex_color = hex_color.lstrip("#")
+
+    r = int(int(hex_color[0:2], 16) * factor)
+    g = int(int(hex_color[2:4], 16) * factor)
+    b = int(int(hex_color[4:6], 16) * factor)
+
+    return f"#{r:02x}{g:02x}{b:02x}"
+
+
+def app_button(parent, text, command, color=PRIMARY):
+
+    btn = tk.Canvas(
+        parent,
+        width=190,
+        height=45,
+        bg="#111111",
+        highlightthickness=0,
+        bd=0,
+        cursor="hand2"
+    )
+
+    # Button text
+    btn.create_text(
+        95,
+        22,
+        text=text,
+        fill="white",
+        font=("Arial", 12, "bold")
+    )
+
+    # Click
+    btn.bind(
+        "<Button-1>",
+        lambda event: command()
+    )
+
+    # Hover
+    def enter(event):
+        btn.configure(bg="#333333")
+
+    def leave(event):
+        btn.configure(bg="#111111")
+
+    btn.bind("<Enter>", enter)
+    btn.bind("<Leave>", leave)
+
+    return btn
+       
+# ==========================================================
+# MAIN LAYOUT
+# ==========================================================
+
+sidebar = tk.Frame(
+    window,
+    bg=SIDEBAR,
+    width=240
+)
+
+sidebar.pack(
+    side="left",
+    fill="y"
+)
+
+sidebar.pack_propagate(False)
+
+
+content = tk.Frame(
+    window,
+    bg=LIGHT
+)
+
+content.pack(
+    side="right",
+    fill="both",
+    expand=True
+)
+
+
+# ========
+# SIDEBAR
+# ========
+
+logo_frame = tk.Frame(
+    sidebar,
+    bg=SIDEBAR
+)
+
+logo_frame.pack(
+    pady=30
+)
+
+
+# Medical logo circle
+
+logo = tk.Canvas(
+    logo_frame,
+    width=65,
+    height=65,
+    bg=SIDEBAR,
+    highlightthickness=0
+)
+
+logo.pack()
+
+logo.create_oval(
+    5, 5, 60, 60,
+    fill=PRIMARY,
+    outline=""
+)
+
+logo.create_text(
+    32, 32,
+    text="+",
+    font=("Arial", 32, "bold"),
+    fill="white"
+)
+
+
+tk.Label(
+    sidebar,
+    text="SWASTHSETHU",
+    font=("Arial", 18, "bold"),
+    bg=SIDEBAR,
+    fg="white"
+).pack()
+
+tk.Label(
+    sidebar,
+    text="Healthcare Platform",
+    font=("Arial", 9),
+    bg=SIDEBAR,
+    fg="#A9D6DF"
+).pack(pady=(2, 30))
+
+
+# ===============
+# SIDEBAR BUTTON
+# ===============
+
+def side_button(text, command):
+
+    btn = tk.Button(
+        sidebar,
+        text=text,
+        command=command,
+        anchor="w",
+        padx=25,
+        font=("Arial", 11, "bold"),
+        bg=SIDEBAR,
+        fg="#D9EEF2",
+        activebackground=PRIMARY,
+        activeforeground="white",
+        relief="flat",
+        bd=0,
+        cursor="hand2",
+        height=2
+    )
+
+    btn.pack(
+        fill="x",
+        padx=10,
+        pady=3
+    )
+
+    hover(btn, SIDEBAR, "#07586B")
+
+    return btn
+
+
+# =======
+# FORMS
+# ========
 
 def display_results(title, data, columns=None):
+
     result_window = tk.Toplevel(window)
+
     result_window.title(title)
-    result_window.geometry("600x400")
+    result_window.geometry("750x450")
+    result_window.configure(bg=LIGHT)
 
     tk.Label(
         result_window,
         text=title,
-        font=("Arial", 16, "bold")
-    ).pack(pady=10)
+        font=("Arial", 20, "bold"),
+        bg=LIGHT,
+        fg=TEXT
+    ).pack(pady=15)
 
     if not data:
+
         tk.Label(
             result_window,
             text="No records found.",
-            font=("Arial", 12)
-        ).pack(pady=20)
+            font=("Arial", 13),
+            bg=LIGHT,
+            fg=GRAY
+        ).pack(pady=30)
+
         return
 
     num_cols = len(data[0])
+
     if not columns or len(columns) != num_cols:
-        columns = [f"Col {i+1}" for i in range(num_cols)]
+        columns = [f"Column {i+1}" for i in range(num_cols)]
 
-    tree_frame = tk.Frame(result_window)
-    tree_frame.pack(fill="both", expand=True, padx=10, pady=10)
+    frame = tk.Frame(
+        result_window,
+        bg=WHITE
+    )
 
-    tree = ttk.Treeview(tree_frame, columns=columns, show="headings")
+    frame.pack(
+        fill="both",
+        expand=True,
+        padx=20,
+        pady=10
+    )
+
+    tree = ttk.Treeview(
+        frame,
+        columns=columns,
+        show="headings"
+    )
+
     for col in columns:
-        tree.heading(col, text=col)
-        tree.column(col, width=120, anchor="center")
+
+        tree.heading(
+            col,
+            text=col
+        )
+
+        tree.column(
+            col,
+            width=130,
+            anchor="center"
+        )
 
     for row in data:
-        tree.insert("", tk.END, values=row)
 
-    vsb = ttk.Scrollbar(tree_frame, orient="vertical", command=tree.yview)
-    tree.configure(yscrollcommand=vsb.set)
+        tree.insert(
+            "",
+            tk.END,
+            values=row
+        )
 
-    tree.pack(side="left", fill="both", expand=True)
-    vsb.pack(side="right", fill="y")
-# ==================================================
+    scrollbar = ttk.Scrollbar(
+        frame,
+        orient="vertical",
+        command=tree.yview
+    )
+
+    tree.configure(
+        yscrollcommand=scrollbar.set
+    )
+
+    tree.pack(
+        side="left",
+        fill="both",
+        expand=True
+    )
+
+    scrollbar.pack(
+        side="right",
+        fill="y"
+    )
+
+
+# ==================
 # BOOK APPOINTMENT
-# ==================================================
+# ==================
 
 def book_appointment_form():
 
     form = tk.Toplevel(window)
+
     form.title("Book Appointment")
-    form.geometry("400x400")
+    form.geometry("760x520")
+    form.configure(bg=LIGHT)
 
     tk.Label(
         form,
-        text="BOOK APPOINTMENT",
-        font=("Arial", 16, "bold")
-    ).pack(pady=15)
+        text="📅  Book Appointment",
+        font=("Arial", 22, "bold"),
+        bg=LIGHT,
+        fg=TEXT
+    ).pack(pady=20)
 
-    tk.Label(form, text="Doctor Name").pack()
+    body = tk.Frame(form, bg=LIGHT)
+    body.pack(fill="both", expand=True, padx=20)
 
-    doctor_entry = tk.Entry(form, width=30)
-    doctor_entry.pack(pady=5)
+    # ---- LEFT SIDE: FORM FIELDS ----
 
-    tk.Label(form, text="Patient Name").pack()
+    left = tk.Frame(body, bg=LIGHT)
+    left.pack(side="left", fill="both", expand=True)
 
-    patient_entry = tk.Entry(form, width=30)
-    patient_entry.pack(pady=5)
+    fields = {}
 
-    tk.Label(form, text="Gender (M/F)").pack()
+    doctor_entry_holder = {}
 
-    gender_entry = tk.Entry(form, width=30)
-    gender_entry.pack(pady=5)
+    for label in [
+        "Doctor Name",
+        "Patient Name",
+        "Gender (M/F)",
+        "Age"
+    ]:
 
-    tk.Label(form, text="Age").pack()
+        tk.Label(
+            left,
+            text=label,
+            font=("Arial", 10, "bold"),
+            bg=LIGHT,
+            fg=TEXT
+        ).pack(anchor="w", padx=10)
 
-    age_entry = tk.Entry(form, width=30)
-    age_entry.pack(pady=5)
+        entry = tk.Entry(
+            left,
+            font=("Arial", 11),
+            width=32,
+            relief="solid",
+            bd=1
+        )
 
+        entry.pack(pady=(5, 15), padx=10, anchor="w")
+
+        fields[label] = entry
+
+        if label == "Doctor Name":
+            doctor_entry_holder["entry"] = entry
+
+    # ---- RIGHT SIDE: DOCTOR LIST ----
+
+    right = tk.Frame(body, bg=WHITE, width=260)
+    right.pack(side="right", fill="y", padx=(15, 0))
+    right.pack_propagate(False)
+
+    tk.Label(
+        right,
+        text="👨‍⚕️ Available Doctors",
+        font=("Arial", 12, "bold"),
+        bg=WHITE,
+        fg=TEXT
+    ).pack(pady=(15, 5), padx=10, anchor="w")
+
+    list_frame = tk.Frame(right, bg=WHITE)
+    list_frame.pack(fill="both", expand=True, padx=10, pady=(0, 10))
+
+    doctor_listbox = tk.Listbox(
+        list_frame,
+        font=("Arial", 11),
+        relief="solid",
+        bd=1,
+        activestyle="none",
+        selectbackground=PRIMARY,
+        selectforeground="white"
+    )
+
+    scrollbar = ttk.Scrollbar(
+        list_frame,
+        orient="vertical",
+        command=doctor_listbox.yview
+    )
+
+    doctor_listbox.configure(yscrollcommand=scrollbar.set)
+
+    doctor_listbox.pack(side="left", fill="both", expand=True)
+    scrollbar.pack(side="right", fill="y")
+
+    try:
+        doctor_rows = bk.view_doc()
+        doctor_names = [row[0] for row in doctor_rows]
+    except Exception as e:
+        doctor_names = []
+        messagebox.showerror("Database Error", str(e))
+
+    for name in doctor_names:
+        doctor_listbox.insert(tk.END, name)
+
+    def fill_doctor(event):
+        selection = doctor_listbox.curselection()
+        if selection:
+            name = doctor_listbox.get(selection[0])
+            doctor_entry_holder["entry"].delete(0, tk.END)
+            doctor_entry_holder["entry"].insert(0, name)
+
+    doctor_listbox.bind("<<ListboxSelect>>", fill_doctor)
+
+    # ---- SUBMIT ----
 
     def submit():
 
-        doctor = doctor_entry.get()
-        patient = patient_entry.get()
-        gender = gender_entry.get()
-        age = age_entry.get()
+        doctor = fields["Doctor Name"].get()
+        patient = fields["Patient Name"].get()
+        gender = fields["Gender (M/F)"].get()
+        age = fields["Age"].get()
 
-        if doctor == "" or patient == "" or gender == "" or age == "":
+        if not doctor or not patient or not gender or not age:
+
             messagebox.showwarning(
                 "Missing Information",
                 "Please fill all fields."
             )
+
             return
 
         try:
             age = int(age)
+
         except ValueError:
+
             messagebox.showerror(
                 "Invalid Age",
                 "Age must be a number."
             )
+
             return
 
         try:
+
             bk.book_appt(
                 doctor,
                 patient,
@@ -140,33 +488,38 @@ def book_appointment_form():
 
             messagebox.showinfo(
                 "Success",
-                "Appointment request successful!"
+                "Appointment booked successfully!"
             )
 
             form.destroy()
 
         except Exception as e:
+
             messagebox.showerror(
                 "Database Error",
                 str(e)
             )
 
-
-    tk.Button(
+    app_button(
         form,
-        text="SUBMIT",
-        command=submit,
-        width=15
-    ).pack(pady=20)
+        "BOOK APPOINTMENT",
+        submit,
+        PRIMARY
+    ).pack(
+        padx=20,
+        fill="x",
+        pady=15
+    )
 
 
-# ==================================================
+# ==============
 # VIEW DOCTORS
-# ==================================================
+# ==============
 
 def view_doctors():
 
     try:
+
         doctors = bk.view_doc()
 
         display_results(
@@ -175,169 +528,229 @@ def view_doctors():
         )
 
     except Exception as e:
+
         messagebox.showerror(
             "Database Error",
             str(e)
         )
 
 
-# ==================================================
+# ==================
+# SHOW TREATMENTS
+# ==================
+
+def view_treatments():
+
+    try:
+
+        treatments = bk.show_treatments()
+
+        display_results(
+            "TREATMENT NAMES",
+            treatments
+        )
+
+    except Exception as e:
+
+        messagebox.showerror(
+            "Database Error",
+            str(e)
+        )
+
+
+# =================
 # MY APPOINTMENTS
-# ==================================================
+# =================
 
 def my_appointments_form():
 
     form = tk.Toplevel(window)
+
     form.title("My Appointments")
-    form.geometry("400x250")
+    form.geometry("450x330")
+    form.configure(bg=LIGHT)
 
     tk.Label(
         form,
-        text="MY APPOINTMENTS",
-        font=("Arial", 16, "bold")
-    ).pack(pady=20)
+        text="📋  My Appointments",
+        font=("Arial", 21, "bold"),
+        bg=LIGHT,
+        fg=TEXT
+    ).pack(pady=30)
 
     tk.Label(
         form,
-        text="Enter Patient Name"
+        text="Patient Name",
+        font=("Arial", 10, "bold"),
+        bg=LIGHT,
+        fg=TEXT
     ).pack()
 
-    patient_entry = tk.Entry(
+    entry = tk.Entry(
         form,
-        width=30
+        width=32,
+        font=("Arial", 11)
     )
 
-    patient_entry.pack(pady=10)
-
+    entry.pack(pady=12)
 
     def search():
 
-        patient = patient_entry.get()
+        patient = entry.get()
 
-        if patient == "":
+        if not patient:
+
             messagebox.showwarning(
                 "Missing Information",
-                "Please enter patient name."
+                "Enter patient name."
             )
+
             return
 
         try:
+
             appointments = bk.my_appts(patient)
 
             if not appointments:
+
                 messagebox.showinfo(
                     "Result",
                     "No appointments found."
                 )
+
             else:
+
                 display_results(
                     "MY APPOINTMENTS",
                     appointments
                 )
 
         except Exception as e:
+
             messagebox.showerror(
                 "Database Error",
                 str(e)
             )
 
-
-    tk.Button(
+    app_button(
         form,
-        text="SEARCH",
-        command=search,
-        width=15
-    ).pack(pady=10)
+        "SEARCH APPOINTMENTS",
+        search,
+        BLUE
+    ).pack(
+        padx=70,
+        fill="x",
+        pady=20
+    )
 
 
-# ==================================================
-# ADMIN REGISTRATION
-# ==================================================
+# ======================
+# PATIENT REGISTRATION
+# ======================
 
 def registration_form():
 
     form = tk.Toplevel(window)
+
     form.title("Patient Registration")
-    form.geometry("400x300")
+    form.geometry("450x400")
+    form.configure(bg=LIGHT)
 
     tk.Label(
         form,
-        text="PATIENT REGISTRATION",
-        font=("Arial", 16, "bold")
-    ).pack(pady=15)
+        text="📝  Patient Registration",
+        font=("Arial", 21, "bold"),
+        bg=LIGHT,
+        fg=TEXT
+    ).pack(pady=25)
 
     tk.Label(
         form,
-        text="Patient Name"
+        text="Patient Name",
+        font=("Arial", 10, "bold"),
+        bg=LIGHT,
+        fg=TEXT
     ).pack()
 
-    name_entry = tk.Entry(
+    name = tk.Entry(
         form,
-        width=30
+        width=32,
+        font=("Arial", 11)
     )
-    name_entry.pack(pady=5)
+
+    name.pack(pady=8)
 
     tk.Label(
         form,
-        text="Mobile Number"
+        text="Mobile Number",
+        font=("Arial", 10, "bold"),
+        bg=LIGHT,
+        fg=TEXT
     ).pack()
 
-    mob_entry = tk.Entry(
+    mobile = tk.Entry(
         form,
-        width=30
+        width=32,
+        font=("Arial", 11)
     )
-    mob_entry.pack(pady=5)
 
+    mobile.pack(pady=8)
 
     def register():
 
-        name = name_entry.get()
-        mob = mob_entry.get()
+        patient = name.get()
+        mob = mobile.get()
 
-        if name == "" or mob == "":
+        if not patient or not mob:
+
             messagebox.showwarning(
                 "Missing Information",
                 "Please fill all fields."
             )
+
             return
 
         try:
-            serial_no = bk.regn(
-                name,
+
+            serial = bk.regn(
+                patient,
                 mob
             )
 
             messagebox.showinfo(
                 "Registration Successful",
-                "Patient registered successfully!\n"
-                + "Serial Number: "
-                + str(serial_no)
+                f"Patient registered successfully!\n\nSerial Number: {serial}"
             )
 
             form.destroy()
 
         except Exception as e:
+
             messagebox.showerror(
                 "Database Error",
                 str(e)
             )
 
-
-    tk.Button(
+    app_button(
         form,
-        text="REGISTER",
-        command=register,
-        width=15
-    ).pack(pady=20)
+        "REGISTER PATIENT",
+        register,
+        ORANGE
+    ).pack(
+        padx=70,
+        fill="x",
+        pady=25
+    )
 
 
-# ==================================================
+# ===================
 # CURRENT BOOKINGS
-# ==================================================
+# ===================
 
 def current_bookings():
 
     try:
+
         bookings = bk.current_bookings()
 
         display_results(
@@ -346,229 +759,680 @@ def current_bookings():
         )
 
     except Exception as e:
+
         messagebox.showerror(
             "Database Error",
             str(e)
         )
 
 
-# ==================================================
+# ================
 # PATIENT HISTORY
-# ==================================================
+# ================
 
 def patient_history_form():
 
     form = tk.Toplevel(window)
+
     form.title("Patient History")
-    form.geometry("400x250")
+    form.geometry("450x330")
+    form.configure(bg=LIGHT)
 
     tk.Label(
         form,
-        text="PATIENT HISTORY",
-        font=("Arial", 16, "bold")
-    ).pack(pady=20)
+        text="📚  Patient History",
+        font=("Arial", 21, "bold"),
+        bg=LIGHT,
+        fg=TEXT
+    ).pack(pady=30)
 
     tk.Label(
         form,
-        text="Enter Patient Serial Number"
+        text="Patient Serial Number",
+        font=("Arial", 10, "bold"),
+        bg=LIGHT,
+        fg=TEXT
     ).pack()
 
-    serial_entry = tk.Entry(
+    entry = tk.Entry(
         form,
-        width=30
+        width=32,
+        font=("Arial", 11)
     )
 
-    serial_entry.pack(pady=10)
-
+    entry.pack(pady=12)
 
     def search():
 
-        serial = serial_entry.get()
-
-        if serial == "":
-            messagebox.showwarning(
-                "Missing Information",
-                "Please enter serial number."
-            )
-            return
+        value = entry.get()
 
         try:
-            serial = int(serial)
 
-            history = bk.patnt_hist(
-                serial
-            )
+            serial = int(value)
+
+            history = bk.patnt_hist(serial)
 
             if not history:
+
                 messagebox.showinfo(
                     "Result",
                     "Patient not found."
                 )
+
             else:
+
                 display_results(
                     "PATIENT HISTORY",
                     history
                 )
 
         except ValueError:
+
             messagebox.showerror(
                 "Invalid Input",
-                "Serial number must be a number."
+                "Enter a valid serial number."
             )
 
         except Exception as e:
+
             messagebox.showerror(
                 "Database Error",
                 str(e)
             )
 
-
-    tk.Button(
+    app_button(
         form,
-        text="SEARCH",
-        command=search,
-        width=15
-    ).pack(pady=10)
+        "SEARCH HISTORY",
+        search,
+        PURPLE
+    ).pack(
+        padx=70,
+        fill="x",
+        pady=20
+    )
 
 
-# ==================================================
-# USER OPTIONS
-# ==================================================
+# ============
+# DASHBOARD
+# ============
 
-def show_user_options():
+def dashboard():
 
-    clear_window()
+    clear_content()
 
-    tk.Label(
-        window,
-        text="USER OPTIONS",
-        font=("Arial", 18, "bold")
-    ).pack(pady=20)
+    # HEADER
 
-    tk.Button(
-        window,
-        text="BOOK APPOINTMENT",
-        command=book_appointment_form,
-        width=25
-    ).pack(pady=5)
+    header = tk.Frame(
+        content,
+        bg=LIGHT
+    )
 
-    tk.Button(
-        window,
-        text="VIEW DOCTORS",
-        command=view_doctors,
-        width=25
-    ).pack(pady=5)
-
-    tk.Button(
-        window,
-        text="MY APPOINTMENTS",
-        command=my_appointments_form,
-        width=25
-    ).pack(pady=5)
-
-    tk.Button(
-        window,
-        text="BACK",
-        command=show_options,
-        width=15
-    ).pack(pady=20)
-
-
-# ==================================================
-# ADMIN OPTIONS
-# ==================================================
-
-def show_admin_options():
-
-    clear_window()
+    header.pack(
+        fill="x",
+        padx=35,
+        pady=(30, 10)
+    )
 
     tk.Label(
-        window,
-        text="ADMIN OPTIONS",
-        font=("Arial", 18, "bold")
-    ).pack(pady=20)
-
-    tk.Button(
-        window,
-        text="REGISTRATION",
-        command=registration_form,
-        width=25
-    ).pack(pady=5)
-
-    tk.Button(
-        window,
-        text="CURRENT BOOKINGS",
-        command=current_bookings,
-        width=25
-    ).pack(pady=5)
-
-    tk.Button(
-        window,
-        text="PATIENT HISTORY",
-        command=patient_history_form,
-        width=25
-    ).pack(pady=5)
-
-    tk.Button(
-        window,
-        text="BACK",
-        command=show_options,
-        width=15
-    ).pack(pady=20)
-
-
-# ==================================================
-# USER / ADMIN OPTIONS
-# ==================================================
-
-def show_options():
-
-    clear_window()
+        header,
+        text="Good day 👋",
+        font=("Arial", 14),
+        bg=LIGHT,
+        fg=GRAY
+    ).pack(anchor="w")
 
     tk.Label(
-        window,
-        text="AYURSETH",
-        font=("Arial", 20, "bold")
-    ).pack(pady=30)
-
-    tk.Button(
-        window,
-        text="USER",
-        command=show_user_options,
-        width=20
-    ).pack(pady=10)
-
-    tk.Button(
-        window,
-        text="ADMIN",
-        command=show_admin_options,
-        width=20
-    ).pack(pady=10)
+        header,
+        text="Welcome to SWASTHSETHU",
+        font=("Arial", 27, "bold"),
+        bg=LIGHT,
+        fg=TEXT
+    ).pack(anchor="w")
 
 
-# ==================================================
-# FIRST SCREEN
-# ==================================================
+    # ============
+    # HERO CARD
+    # ============
 
-def open_application():
+    hero = tk.Frame(
+        content,
+        bg=PRIMARY,
+        height=150
+    )
 
-    clear_window()
-    show_options()
+    hero.pack(
+        fill="x",
+        padx=35,
+        pady=20
+    )
+
+    hero.pack_propagate(False)
+
+    tk.Label(
+        hero,
+        text="Your health is our priority ❤️",
+        font=("Arial", 22, "bold"),
+        bg=PRIMARY,
+        fg="white"
+    ).pack(
+        anchor="w",
+        padx=30,
+        pady=(25, 5)
+    )
+
+    tk.Label(
+        hero,
+        text="Book appointments, find doctors and manage patient care.",
+        font=("Arial", 11),
+        bg=PRIMARY,
+        fg="#E5FFFF"
+    ).pack(
+        anchor="w",
+        padx=30
+    )
 
 
-button = tk.Button(
-    window,
-    text="Tap to open",
-    command=open_application,
-    width=20
+    # ============
+    # STAT CARDS
+    # ============
+
+    cards = tk.Frame(
+        content,
+        bg=LIGHT
+    )
+
+    cards.pack(
+        fill="x",
+        padx=35
+    )
+
+
+    def stat_card(parent, icon, title, subtitle, color):
+
+        frame = tk.Frame(
+            parent,
+            bg=WHITE,
+            width=190,
+            height=115
+        )
+
+        frame.pack(
+            side="left",
+            padx=(0, 15)
+        )
+
+        frame.pack_propagate(False)
+
+        tk.Label(
+            frame,
+            text=icon,
+            font=("Arial", 25),
+            bg=WHITE,
+            fg=color
+        ).pack(
+            anchor="w",
+            padx=18,
+            pady=(12, 0)
+        )
+
+        tk.Label(
+            frame,
+            text=title,
+            font=("Arial", 12, "bold"),
+            bg=WHITE,
+            fg=TEXT
+        ).pack(
+            anchor="w",
+            padx=18
+        )
+
+        tk.Label(
+            frame,
+            text=subtitle,
+            font=("Arial", 9),
+            bg=WHITE,
+            fg=GRAY
+        ).pack(
+            anchor="w",
+            padx=18
+        )
+
+
+    stat_card(
+        cards,
+        "👨‍⚕️",
+        "Doctors",
+        "Find available doctors",
+        BLUE
+    )
+
+    stat_card(
+        cards,
+        "📅",
+        "Appointments",
+        "Manage appointments",
+        PRIMARY
+    )
+
+    stat_card(
+        cards,
+        "❤️",
+        "Patient Care",
+        "Healthcare services",
+        PINK
+    )
+
+
+    # ================
+    # QUICK ACTIONS
+    # ================
+
+    tk.Label(
+        content,
+        text="Quick Actions",
+        font=("Arial", 18, "bold"),
+        bg=LIGHT,
+        fg=TEXT
+    ).pack(
+        anchor="w",
+        padx=35,
+        pady=(30, 15)
+    )
+
+    actions = tk.Frame(
+        content,
+        bg=LIGHT
+    )
+
+    actions.pack(
+        padx=35,
+        fill="x"
+    )
+
+
+    action1 = app_button(
+        actions,
+        "📅  Book Appointment",
+        book_appointment_form,
+        PRIMARY
+    )
+
+    action1.pack(
+        side="left",
+        padx=(0, 10),
+        ipadx=10
+    )
+
+
+    action2 = app_button(
+        actions,
+        "👨‍⚕️  Find Doctors",
+        view_doctors,
+        BLUE
+    )
+
+    action2.pack(
+        side="left",
+        padx=10,
+        ipadx=10
+    )
+
+
+    action3 = app_button(
+        actions,
+        "📋  My Appointments",
+        my_appointments_form,
+        PURPLE
+    )
+
+    action3.pack(
+        side="left",
+        padx=10,
+        ipadx=10
+    )
+
+
+    action4 = app_button(
+        actions,
+        "💊  Show Treatment Names",
+        view_treatments,
+        GREEN
+    )
+
+    action4.pack(
+        side="left",
+        padx=10,
+        ipadx=10
+    )
+
+
+# ===========
+# USER PAGE
+# ===========
+
+def user_page():
+
+    clear_content()
+
+    tk.Label(
+        content,
+        text="👤 User Services",
+        font=("Arial", 27, "bold"),
+        bg=LIGHT,
+        fg=TEXT
+    ).pack(
+        anchor="w",
+        padx=40,
+        pady=(40, 10)
+    )
+
+    tk.Label(
+        content,
+        text="Everything you need to manage your healthcare.",
+        font=("Arial", 11),
+        bg=LIGHT,
+        fg=GRAY
+    ).pack(
+        anchor="w",
+        padx=40
+    )
+
+    services = tk.Frame(
+        content,
+        bg=LIGHT
+    )
+
+    services.pack(
+        padx=40,
+        pady=35,
+        fill="x"
+    )
+
+    # CARD CREATOR
+
+    def service_card(icon, title, description, command, color):
+
+        card = tk.Frame(
+            services,
+            bg=WHITE,
+            width=300,
+            height=150
+        )
+
+        card.pack(
+            side="left",
+            padx=(0, 20)
+        )
+
+        card.pack_propagate(False)
+
+        tk.Label(
+            card,
+            text=icon,
+            font=("Arial", 30),
+            bg=WHITE
+        ).pack(
+            anchor="w",
+            padx=20,
+            pady=(15, 0)
+        )
+
+        tk.Label(
+            card,
+            text=title,
+            font=("Arial", 13, "bold"),
+            bg=WHITE,
+            fg=TEXT
+        ).pack(
+            anchor="w",
+            padx=20
+        )
+
+        tk.Label(
+            card,
+            text=description,
+            font=("Arial", 9),
+            bg=WHITE,
+            fg=GRAY
+        ).pack(
+            anchor="w",
+            padx=20
+        )
+
+        btn = tk.Button(
+            card,
+            text="Open →",
+            command=command,
+            bg=color,
+            fg="white",
+            relief="flat",
+            bd=0,
+            cursor="hand2"
+        )
+
+        btn.pack(
+            anchor="w",
+            padx=20,
+            pady=8
+        )
+
+    service_card(
+        "📅",
+        "Book Appointment",
+        "Schedule your doctor visit.",
+        book_appointment_form,
+        PRIMARY
+    )
+
+    service_card(
+        "👨‍⚕️",
+        "Find Doctors",
+        "View available doctors.",
+        view_doctors,
+        BLUE
+    )
+
+    # SECOND ROW
+
+    row2 = tk.Frame(
+        content,
+        bg=LIGHT
+    )
+
+    row2.pack(
+        padx=40,
+        fill="x"
+    )
+
+    # temporarily reuse services container
+    old = services
+
+
+# ============
+# ADMIN PAGE
+# ============
+
+def admin_page():
+
+    clear_content()
+
+    tk.Label(
+        content,
+        text="⚙️ Admin Dashboard",
+        font=("Arial", 27, "bold"),
+        bg=LIGHT,
+        fg=TEXT
+    ).pack(
+        anchor="w",
+        padx=40,
+        pady=(40, 10)
+    )
+
+    tk.Label(
+        content,
+        text="Manage patients, bookings and medical records.",
+        font=("Arial", 11),
+        bg=LIGHT,
+        fg=GRAY
+    ).pack(
+        anchor="w",
+        padx=40
+    )
+
+    actions = tk.Frame(
+        content,
+        bg=LIGHT
+    )
+
+    actions.pack(
+        padx=40,
+        pady=40
+    )
+
+    admin_items = [
+        ("📝", "Patient Registration", registration_form, ORANGE),
+        ("📊", "Current Bookings", current_bookings, PINK),
+        ("📚", "Patient History", patient_history_form, PURPLE)
+    ]
+
+    for icon, title, command, color in admin_items:
+
+        card = tk.Frame(
+            actions,
+            bg=WHITE,
+            width=280,
+            height=140
+        )
+
+        card.pack(
+            side="left",
+            padx=10
+        )
+
+        card.pack_propagate(False)
+
+        tk.Label(
+            card,
+            text=icon,
+            font=("Arial", 30),
+            bg=WHITE
+        ).pack(
+            pady=(12, 0)
+        )
+
+        tk.Label(
+            card,
+            text=title,
+            font=("Arial", 12, "bold"),
+            bg=WHITE,
+            fg=TEXT
+        ).pack()
+
+        btn = tk.Button(
+            card,
+            text="Open →",
+            command=command,
+            bg=color,
+            fg="white",
+            relief="flat",
+            bd=0,
+            cursor="hand2"
+        )
+
+        btn.pack(
+            pady=8
+        )
+
+
+# ====================
+# SIDEBAR NAVIGATION
+# ====================
+
+side_button(
+    "🏠   Dashboard",
+    dashboard
 )
 
-button.pack(pady=150)
+side_button(
+    "👤   User Services",
+    user_page
+)
+
+side_button(
+    "⚙️   Admin Panel",
+    admin_page
+)
 
 
-# ==================================================
+# Separator
+
+tk.Frame(
+    sidebar,
+    bg="#17576A",
+    height=1
+).pack(
+    fill="x",
+    padx=20,
+    pady=25
+)
+
+
+tk.Label(
+    sidebar,
+    text="QUICK ACCESS",
+    font=("Arial", 8, "bold"),
+    bg=SIDEBAR,
+    fg="#78AAB5"
+).pack(
+    anchor="w",
+    padx=25,
+    pady=5
+)
+
+
+side_button(
+    "📅   Book Appointment",
+    book_appointment_form
+)
+
+
+side_button(
+    "👨‍⚕️   View Doctors",
+    view_doctors
+)
+
+
+side_button(
+    "💊   Show Treatment Names",
+    view_treatments
+)
+
+
+# =========
+# FOOTER
+# =========
+
+tk.Label(
+    sidebar,
+    text="SWASTHSETHU v1.0",
+    font=("Arial", 8),
+    bg=SIDEBAR,
+    fg="#6F9BA5"
+).pack(
+    side="bottom",
+    pady=20
+)
+
+
+# ===================
+# START DASHBOARD
+# ===================
+
+dashboard()
+
+
+# ======
 # RUN
-# ==================================================
+# ======
 
 window.mainloop()
-
