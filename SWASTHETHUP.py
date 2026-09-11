@@ -18,7 +18,7 @@ except Exception:
 # ==============
 
 window = tk.Tk()
-window.title("SWASTHSETHU")
+window.title("SWASTHSETHU ")
 window.geometry("1100x700")
 window.resizable(False, False)
 window.configure(bg="#F4F8FC")
@@ -42,10 +42,10 @@ LIGHT = "#F4F8FC"
 TEXT = "#0F0808"
 GRAY = "#718096"
 
-# Sidebar Button Colors (BLACK BG / WHITE TEXT)
-SIDE_BTN_BG = "#000000"
-SIDE_BTN_FG = "#FFFFFF"
-SIDE_BTN_HOVER = "#222222"
+# Sidebar Button Colors (High Contrast & Visible)
+SIDE_BTN_BG = "#063B4C"       # Matches sidebar background
+SIDE_BTN_FG = "#FFFFFF"       # Bright white text
+SIDE_BTN_HOVER = "#0C536B"    # Slightly lighter teal highlight on hover
 
 # Global admin authentication state
 is_admin_logged_in = False
@@ -244,7 +244,7 @@ def book_appointment_form():
         form,
         text="📅  Book Appointment",
         font=("Arial", 22, "bold"),
-        bg="#FEFFFF",
+        bg="#FDFEFF",
         fg="#000000"
     ).pack(pady=20)
 
@@ -738,7 +738,7 @@ def user_page():
         text="Everything you need to manage your healthcare.",
         font=("Arial", 11),
         bg=LIGHT,
-        fg=GRAY
+        fg="#000000"
     ).pack(anchor="w", padx=40)
 
     services = tk.Frame(content, bg=LIGHT)
@@ -777,7 +777,7 @@ def user_page():
             text="Open →",
             command=command,
             bg=color,
-            fg="white",
+            fg="#000000",
             relief="flat",
             bd=0,
             cursor="hand2"
@@ -850,7 +850,7 @@ def admin_login_page():
     def verify():
         global is_admin_logged_in
         pwd = password_entry.get()
-        if pwd == "admin123":  # Set your admin password here
+        if pwd == "admin123":            #                                                          Set your admin password here
             is_admin_logged_in = True
             admin_page()
         else:
@@ -866,7 +866,7 @@ def admin_login_page():
     login_btn = tk.Button(
         card,
         text="LOGIN",
-        font=("Arial", 11, "bold"),
+        font=("Arial", 15, "bold"),
         bg=PRIMARY,
         fg="white",
         activebackground=PRIMARY_DARK,
@@ -890,7 +890,7 @@ def admin_page():
 
     clear_content()
 
-    header_frame = tk.Frame(content, bg=LIGHT)
+    header_frame = tk.Frame(content, bg=WHITE)
     header_frame.pack(fill="x", padx=40, pady=(40, 10))
 
     tk.Label(
@@ -910,9 +910,9 @@ def admin_page():
     logout_btn = tk.Button(
         header_frame,
         text="Logout 🚪",
-        font=("Arial", 10, "bold"),
+        font=("Sans", 15, "bold"),
         bg="#E53E3E",
-        fg="white",
+        fg="#000000",
         relief="flat",
         cursor="hand2",
         command=logout
@@ -961,7 +961,7 @@ def admin_page():
             text="Open →",
             command=command,
             bg=color,
-            fg="white",
+            fg="#000000",
             relief="flat",
             bd=0,
             cursor="hand2"
